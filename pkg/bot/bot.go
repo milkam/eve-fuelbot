@@ -149,12 +149,16 @@ func (b *fuelBot) loadStructures() ([]structureData, error) {
 	}
 
 	ctx := context.WithValue(context.Background(), goesi.ContextOAuth2, b.tokenSource)
-	characterInfo, _, err := b.esi.ESI.CharacterApi.GetCharactersCharacterId(ctx, v.CharacterID, nil)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to get character info")
+
+	corpHistory, _, error1 := b.esi.ESI.CharacterApi.GetCharactersCharacterIdCorporationhistory(ctx, v.CharacterID, nil)
+	if error1 != nil {
+		e := err.(esi.GenericSwaggerError)
+		return nil, errors.Wrapf(err, "unable to get corporation history: %s", e.Model())
 	}
 
-	corpStructures, _, err := b.esi.ESI.CorporationApi.GetCorporationsCorporationIdStructures(ctx, characterInfo.CorporationId, nil)
+	var lastCorp = corpHistory[0]
+
+	corpStructures, _, err := b.esi.ESI.CorporationApi.GetCorporationsCorporationIdStructures(ctx, lastCorp.CorporationId, nil)
 	if err != nil {
 		e := err.(esi.GenericSwaggerError)
 		return nil, errors.Wrapf(err, "unable to read corporation structures: %s", e.Model())

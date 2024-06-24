@@ -3,12 +3,12 @@ package bot
 import (
 	"context"
 	"fmt"
+	"github.com/dustin/go-humanize"
 	"strings"
 	"time"
 
 	"github.com/antihax/goesi/esi"
 	"github.com/bwmarrin/discordgo"
-	"github.com/dustin/go-humanize"
 )
 
 type structure struct {
@@ -215,6 +215,7 @@ func (b *fuelBot) allStructuresMessage(structures []structureData) *discordgo.Me
 	)
 
 	for _, structureData := range structures {
+		b.log.Infow("Getting data for structure", "structure", structureData.CorporationData)
 		structureType := structureByTypeID(structureData.CorporationData.TypeId)
 		// Add symbols for time ranges for fuel remaining. Green = OK
 		symbol := ":green_square:"
