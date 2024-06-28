@@ -3,12 +3,12 @@ package bot
 import (
 	"context"
 	"fmt"
-	"github.com/dustin/go-humanize"
-	"strings"
-	"time"
-
 	"github.com/antihax/goesi/esi"
 	"github.com/bwmarrin/discordgo"
+	"github.com/dustin/go-humanize"
+	"regexp"
+	"strings"
+	"time"
 )
 
 type structure struct {
@@ -181,7 +181,8 @@ func (b *fuelBot) messageFuelHandler(s *discordgo.Session, m *discordgo.MessageC
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
-
+	re := regexp.MustCompile(`(?i)!([a-zA-Z]+)suck`)
+	match := re.FindStringSubmatch(m.Content)
 	// check if the message is "!fuel"
 	if m.Content == "!fuel" {
 		// Find the channel that the message came from.
@@ -205,9 +206,39 @@ func (b *fuelBot) messageFuelHandler(s *discordgo.Session, m *discordgo.MessageC
 			b.log.Errorw("error sending discord message", "err", err)
 			return
 		}
+	} else if len(match) > 0 {
+		targetUser := match[1]
+		embedMessage := b.userSuck(targetUser, m.Author.String())
+		c, err := s.State.Channel(m.ChannelID)
+
+		if err != nil {
+			// Could not find channel.
+			b.log.Errorw("error finding channel_id to respond to !fuel message", "err", err)
+			return
+		}
+		_, err = b.discord.ChannelMessageSendEmbed(c.ID, embedMessage)
+		if err != nil {
+			b.log.Errorw("error sending discord message", "err", err)
+			return
+		}
 	}
 }
 
+func (b *fuelBot) userSuck(userName string, author string) *discordgo.MessageEmbed {
+	// Create the embed message
+	embed := &discordgo.MessageEmbed{
+		Color: 0xff0000, // Set the color of the embed message
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:  "User Issue Notification",
+				Value: fmt.Sprintf("%s wanted to be sure we all knew that %s suck.", author, userName),
+			},
+		},
+		Timestamp: time.Now().Format(time.RFC3339), // Set the timestamp
+	}
+
+	return embed
+}
 func (b *fuelBot) allStructuresMessage(structures []structureData) *discordgo.MessageEmbed {
 	var (
 		fields    []*discordgo.MessageEmbedField
