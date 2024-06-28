@@ -3,12 +3,13 @@ package bot
 import (
 	"context"
 	"fmt"
-	"github.com/antihax/goesi/esi"
-	"github.com/bwmarrin/discordgo"
 	"github.com/dustin/go-humanize"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/antihax/goesi/esi"
+	"github.com/bwmarrin/discordgo"
 )
 
 type structure struct {
